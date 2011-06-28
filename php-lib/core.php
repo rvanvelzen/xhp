@@ -324,11 +324,10 @@ abstract class :x:composable-element extends :x:base {
       // case self::TYPE_VAR: `var` (any type)
 
       case self::TYPE_ENUM:
-        foreach ($decl[$attr][1] as $enum) {
-          if ($enum === $val) {
-            return;
-          }
+        if (in_array($val, $decl[$attr][1])) {
+          return;
         }
+
         $enums = 'enum("' . implode('","', $decl[$attr][1]) . '")';
         throw new XHPInvalidAttributeException($this, $enums, $attr, $val);
     }
