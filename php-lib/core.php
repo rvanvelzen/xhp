@@ -22,7 +22,9 @@ abstract class :x:base {
   abstract public function setAttribute($attr, $val);
   abstract public function categoryOf($cat);
   abstract public function __toString();
-  abstract protected static function &__xhpAttributeDeclaration();
+  // PHP Strict Standards define that static function should not be declared
+  // abstract, so this method is commented out for now
+  // abstract protected static function &__xhpAttributeDeclaration();
   abstract protected function &__xhpCategoryDeclaration();
   abstract protected function &__xhpChildrenDeclaration();
 
@@ -213,7 +215,11 @@ abstract class :x:composable-element extends :x:base {
       if ($child instanceof :x:element) {
         do {
           if (:x:base::$ENABLE_VALIDATION) {
-            $child->validateChildren();
+            try {
+              $child->validateChildren();
+            } catch (Exception $e) {
+              trigger_error($e->getMessage(), E_USER_ERROR);
+            }
           }
           $child = $child->render();
         } while ($child instanceof :x:element);
