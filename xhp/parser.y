@@ -1593,8 +1593,7 @@ xhp_attribute:
   xhp_label_pass '=' xhp_attribute_value {
     $$ = "'" + $1 + "' => " + $3;
   }
-|
-  xhp_label_pass {
+| xhp_label_pass {
     $$ = "'" + $1 + "' => true";
   }
 ;
