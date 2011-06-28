@@ -96,13 +96,15 @@ abstract class :xhp:html-element extends :x:primitive {
 
 /**
  * Subclasses of :xhp:html-singleton may not contain children. When rendered they
- * will be in singleton (<img />, <br />) form.
+ * will be in singleton (<img>, <br>) form.
+ *
+ * Small addition: because of HTML5 we don't need the trailing slash.
  */
 abstract class :xhp:html-singleton extends :xhp:html-element {
   children empty;
 
   protected function stringify() {
-    return $this->renderBaseAttrs() . ' />';
+    return $this->renderBaseAttrs() . '>';
   }
 }
 
