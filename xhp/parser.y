@@ -1605,6 +1605,8 @@ xhp_attribute_value:
 | '{' { push_state(PHP); } expr { pop_state(); } '}' {
     $$ = $3;
   }
+| T_LNUMBER
+| T_DNUMBER
 ;
 
 xhp_attribute_quoted_value:

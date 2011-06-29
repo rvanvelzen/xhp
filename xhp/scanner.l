@@ -557,6 +557,8 @@ NEWLINE ("\r\n"|"\n"|"\r")
   "="|"/"|">" tok(yytext[0]);
   {WHITESPACE}+ yy_scan_newlines(yytext, yyg);
   {LABEL} tok(T_STRING);
+  {LNUM}|{HNUM} tok(T_LNUMBER);
+  {DNUM}|{EXPONENT_DNUM} tok(T_DNUMBER);
 }
 
 <XHP_ATTR_VAL>{
