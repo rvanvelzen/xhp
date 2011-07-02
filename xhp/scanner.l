@@ -410,7 +410,7 @@ NEWLINE ("\r\n"|"\n"|"\r")
       // we got them all covered though.
       case T_ECHO: case T_RETURN:
       case T_EXTENDS: case T_INSTANCEOF: case T_DOUBLE_ARROW:
-      case T_XHP_ATTRIBUTE:
+      case T_XHP_ATTRIBUTE: case T_IMPLEMENTS:
         tok(T_XHP_COLON);
         break;
       default:

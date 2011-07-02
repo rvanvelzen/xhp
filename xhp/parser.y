@@ -166,8 +166,8 @@ static void replacestr(string &source, const string &find, const string &rep) {
 %token T_DOLLAR_OPEN_CURLY_BRACES /* unused in XHP: `${` in `"${foo}"` */
 %token T_CURLY_OPEN /* unused in XHP: `{$` in `"{$foo}"` */
 %token T_PAAMAYIM_NEKUDOTAYIM
-%token T_BINARY_DOUBLE /* unsused in XHP: `b"` in `b"foo"` */
-%token T_BINARY_HEREDOC /* unsused in XHP: `b<<<` in `b<<<FOO` */
+%token T_BINARY_DOUBLE /* unused in XHP: `b"` in `b"foo"` */
+%token T_BINARY_HEREDOC /* unused in XHP: `b<<<` in `b<<<FOO` */
 %token T_NAMESPACE
 %token T_NS_C
 %token T_DIR
@@ -493,7 +493,7 @@ foreach_optional_arg:
   /* empty */ {
     $$ = "";
   }
-| T_DOUBLE_ARROW foreach_variable {
+| array_pair_list_indicator foreach_variable {
     $$ = $1 + $2;
   }
 ;
@@ -1202,6 +1202,14 @@ scalar:
 | common_scalar
 ;
 
+array_pair_list_indicator:
+  T_DOUBLE_ARROW
+| ':' {
+    yyextra->used = true;
+    $$ = "=>";
+  }
+;
+
 static_array_pair_list:
   /* empty */ {
     $$ = "";
@@ -1217,13 +1225,13 @@ possible_comma:
 ;
 
 non_empty_static_array_pair_list:
-  non_empty_static_array_pair_list ',' static_scalar T_DOUBLE_ARROW static_scalar {
+  non_empty_static_array_pair_list ',' static_scalar array_pair_list_indicator static_scalar {
     $$ = $1 + $2 + $3 + $4 + $5;
   }
 | non_empty_static_array_pair_list ',' static_scalar {
     $$ = $1 + $2 + $3;
   }
-| static_scalar T_DOUBLE_ARROW static_scalar {
+| static_scalar array_pair_list_indicator static_scalar {
     $$ = $1 + $2 + $3;
   }
 | static_scalar
@@ -1388,23 +1396,23 @@ array_pair_list:
 ;
 
 non_empty_array_pair_list:
-  non_empty_array_pair_list ',' expr T_DOUBLE_ARROW expr {
+  non_empty_array_pair_list ',' expr array_pair_list_indicator expr {
     $$ = $1 + $2 + $3 + $4 + $5;
   }
 | non_empty_array_pair_list ',' expr {
     $$ = $1 + $2 + $3;
   }
-| expr T_DOUBLE_ARROW expr {
+| expr array_pair_list_indicator expr {
     $$ = $1 + $2 + $3;
   }
 | expr
-| non_empty_array_pair_list ',' expr T_DOUBLE_ARROW '&' w_variable {
+| non_empty_array_pair_list ',' expr array_pair_list_indicator '&' w_variable {
     $$ = $1 + $2 + $3 + $4 + $5 + $6;
   }
 | non_empty_array_pair_list ',' '&' w_variable {
     $$ = $1 + $2 + $3 + $4;
   }
-| expr T_DOUBLE_ARROW '&' w_variable {
+| expr array_pair_list_indicator '&' w_variable {
     $$ = $1 + $2 + $3 + $4;
   }
 | '&' w_variable {
@@ -1508,7 +1516,7 @@ xhp_tag_close:
       replacestr(e1, "_", "-");
       replacestr(e2, "__", ":");
       replacestr(e2, "_", "-");
-      string e = "syntax error, mismatched tag </" + e1 + ">, expecting </" + e2 +">";
+      string e = "syntax error, mismatched tag [/" + e1 + "], expecting [/" + e2 + "]";
       yyerror(yyscanner, NULL, e.c_str());
       yyextra->terminated = true;
     }
@@ -1934,6 +1942,17 @@ expr_without_variable:
     } else {
       $$ = $1 + $2 + $3 + $4;
     }
+  }
+| '[' array_pair_list ']' {
+    yyextra->used = true;
+    $$ = "array(" + $2 + ")";
+  }
+;
+
+static_scalar:
+  '[' static_array_pair_list ']' {
+    yyextra->used = true;
+    $$ = "array(" + $2 + ")";
   }
 ;
 

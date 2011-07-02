@@ -30,6 +30,7 @@ struct xhp_flags_t {
   bool short_tags;
   bool idx_expr;
   bool include_debug;
+  bool use_fastpath;
   bool eval;
   bool emit_namespaces;
 };

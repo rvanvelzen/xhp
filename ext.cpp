@@ -49,6 +49,7 @@ typedef struct {
 ZEND_BEGIN_MODULE_GLOBALS(xhp)
   bool idx_expr;
   bool include_debug;
+  bool use_fastpath;
 ZEND_END_MODULE_GLOBALS(xhp)
 ZEND_DECLARE_MODULE_GLOBALS(xhp)
 
@@ -62,7 +63,7 @@ ZEND_DECLARE_MODULE_GLOBALS(xhp)
 // PHP 5.3 helper functions
 #if PHP_VERSION_ID >= 50300
 
-// These functions wese made static to zend_stream.c in r255174. These an inline copies of those functions.
+// These functions were made static to zend_stream.c in r255174. These are inline copies of those functions.
 static int zend_stream_getc(zend_file_handle *file_handle TSRMLS_DC) {
   char buf;
 
@@ -160,7 +161,9 @@ static zend_op_array* xhp_compile_file(zend_file_handle* f, int type TSRMLS_DC) 
   flags.short_tags = CG(short_tags);
   flags.idx_expr = XHPG(idx_expr);
   flags.include_debug = XHPG(include_debug);
+  flags.use_fastpath = XHPG(use_fastpath);
 #if PHP_VERSION_ID >= 50300
+#define XHP_EMIT_NAMESPACES
   flags.emit_namespaces = true;
 #else
   flags.emit_namespaces = false;
@@ -172,7 +175,7 @@ static zend_op_array* xhp_compile_file(zend_file_handle* f, int type TSRMLS_DC) 
     CG(in_compilation) = true;
     CG(zend_lineno) = error_lineno;
     zend_set_compiled_filename(const_cast<char*>(f->filename) TSRMLS_CC);
-    zend_error(E_PARSE, "%s", error_str.c_str());
+    zend_error(E_PARSE, "%s (xhp)", error_str.c_str());
     zend_bailout();
   } else if (result == XHPRewrote) {
     code_to_give_to_php = &rewrit;
@@ -242,6 +245,7 @@ static zend_op_array* xhp_compile_string(zval* str, char *filename TSRMLS_DC) {
   flags.short_tags = CG(short_tags);
   flags.idx_expr = XHPG(idx_expr);
   flags.include_debug = XHPG(include_debug);
+  flags.use_fastpath = XHPG(use_fastpath);
   flags.eval = true;
   XHPResult result = xhp_preprocess(original_code, rewrit, error_str, error_lineno, flags);
 
@@ -279,6 +283,7 @@ static zend_op_array* xhp_compile_string(zval* str, char *filename TSRMLS_DC) {
 static void php_xhp_init_globals(zend_xhp_globals* xhp_globals) {
   xhp_globals->idx_expr = false;
   xhp_globals->include_debug = true;
+  xhp_globals->use_fastpath = false;
 }
 
 //
@@ -286,6 +291,7 @@ static void php_xhp_init_globals(zend_xhp_globals* xhp_globals) {
 PHP_INI_BEGIN()
   STD_PHP_INI_BOOLEAN("xhp.idx_expr", "0", PHP_INI_PERDIR, OnUpdateBool, idx_expr, zend_xhp_globals, xhp_globals)
   STD_PHP_INI_BOOLEAN("xhp.include_debug", "1", PHP_INI_PERDIR, OnUpdateBool, include_debug, zend_xhp_globals, xhp_globals)
+  STD_PHP_INI_BOOLEAN("xhp.use_fastpath", "0", PHP_INI_PERDIR, OnUpdateBool, use_fastpath, zend_xhp_globals, xhp_globals)
 PHP_INI_END()
 
 //

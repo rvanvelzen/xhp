@@ -38,16 +38,20 @@ XHPResult xhp_preprocess(string &in, string &out, bool isEval, string &errDescri
   flags.short_tags = true;
   flags.idx_expr = true;
   flags.include_debug = true;
+  flags.use_fastpath = true;
   flags.emit_namespaces = false;
   return xhp_preprocess(in, out, errDescription, errLineno, flags);
 }
 
 XHPResult xhp_preprocess(std::string &in, std::string &out, std::string &errDescription, uint32_t &errLineno, const xhp_flags_t &flags) {
+  char* buffer;
 
-  // Early bail if the code doesn't contain anything that looks like XHP
-  char* buffer = const_cast<char*>(in.c_str());
-  if (!xhp_fastpath(buffer, in.length(), flags)) {
-    return XHPDidNothing;
+  if (flags.use_fastpath) {
+    // Early bail if the code doesn't contain anything that looks like XHP
+    buffer = const_cast<char*>(in.c_str());
+    if (!xhp_fastpath(buffer, in.length(), flags)) {
+      return XHPDidNothing;
+    }
   }
 
   // Create a flex buffer
