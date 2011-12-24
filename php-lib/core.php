@@ -16,7 +16,7 @@
 */
 
 abstract class :x:base {
-  abstract public function __construct();
+  abstract public function __construct($attributes, $children);
   abstract public function appendChild($child);
   abstract public function getAttribute($attr);
   abstract public function setAttribute($attr, $val);
@@ -629,7 +629,15 @@ class :x:composite extends :x:base {
     $parent,
     $anchor;
 
-  public function __construct(:x:base $parent, :x:base $anchor) {
+  public function __construct($parent, $anchor) {
+    if (!$parent instanceof :x:base) {
+      throw new InvalidArgumentException('$parent should be instance of :x:base');
+    }
+
+    if (!$anchoor instanceof :x:base) {
+      throw new InvalidArgumentException('$parent should be instance of :x:base');
+    }
+
     $this->parent = $parent;
     $this->anchor = $anchor;
   }

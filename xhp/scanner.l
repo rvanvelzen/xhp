@@ -325,7 +325,10 @@ NEWLINE ("\r\n"|"\n"|"\r")
   __function__ tok(T_FUNC_C);
   __line__ tok(T_LINE);
   __file__ tok(T_FILE);
+  __trait__ tok(T_TRAIT_C);
   namespace tok(T_NAMESPACE);
+  trait tok(T_TRAIT);
+  insteadof tok(T_INSTEADOF);
   __namespace__ tok(T_NS_C);
   __dir__ tok(T_DIR);
   attribute {
