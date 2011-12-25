@@ -163,7 +163,7 @@ static void replacestr(string &source, const string &find, const string &rep) {
 %token T_WHITESPACE
 %token T_START_HEREDOC /* unused in XHP; replaced with T_HEREDOC */
 %token T_END_HEREDOC /* unused in XHP; replaced with T_HEREDOC */
-%token T_HEREDOC /* new in XHP; replaces start_heredoc encaps_list T_END_HEREDOC */
+T_%token T_HEREDOC /* new in XHP; replaces start_heredoc encaps_list T_END_HEREDOC */
 %token T_DOLLAR_OPEN_CURLY_BRACES /* unused in XHP: `${` in `"${foo}"` */
 %token T_CURLY_OPEN /* unused in XHP: `{$` in `"{$foo}"` */
 %token T_PAAMAYIM_NEKUDOTAYIM
@@ -1123,7 +1123,9 @@ function:
 ;
 
 lexical_vars:
-  /* empty */
+  /* empty */ {
+    $$ = "";
+  }
 | T_USE '(' lexical_var_list ')' {
     $$ = $1 + $2 + $3 + $4;
   }
