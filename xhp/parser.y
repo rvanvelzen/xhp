@@ -57,7 +57,7 @@ static void replacestr(string &source, const string &find, const string &rep) {
 
 %}
 
-%expect 10
+%expect 3
 // 2: PHP's if/else grammar
 // 7: expr '[' dim_offset ']' -- shift will default to first grammar
 %name-prefix = "xhp"
@@ -908,6 +908,57 @@ non_empty_for_expr:
 | expr
 ;
 
+chaining_method_or_property:
+  chaining_method_or_property variable_property {
+    $$ = $1 + $2;
+  }
+| variable_property {
+    $$ = $1;
+  }
+;
+
+chaining_dereference:
+  chaining_dereference '[' dim_offset ']' {
+    $$ = $1 + $2 + $3 + $4;
+  }
+| '[' dim_offset ']' {
+    $$ = $1 + $2 + $3;
+  }
+;
+
+chaining_instance_call:
+  chaining_dereference chaining_method_or_property {
+    $$ = $1 + $2;
+  }
+| chaining_dereference {
+    $$ = $1;
+  }
+| chaining_method_or_property {
+    $$ = $1;
+  }
+;
+
+instance_call:
+  /* empty */ {
+    $$ = "";
+  }
+| chaining_instance_call {
+    $$ = $1;
+  }
+;
+
+new_expr:
+  T_NEW class_name_reference ctor_arguments {
+    $$ = $1 + " " + $2 + $3;
+  }
+;
+
+parenthesis_expr:
+  '(' expr ')' {
+    $$ = $1 + $2 + $3;
+  }
+;
+
 expr_without_variable:
   T_LIST '(' assignment_list ')' '=' expr {
     $$ = $1 + $2 + $3 + $4 + $5 + $6;
@@ -918,14 +969,14 @@ expr_without_variable:
 | variable '=' '&' variable {
     $$ = $1 + $2 + $3 + $4;
   }
-| variable '=' '&' T_NEW class_name_reference ctor_arguments {
-    $$ = $1 + $2 + $3 + $4 + " " + $5 + $6;
+| variable '=' '&' new_expr {
+    $$ = $1 + $2 + $3 + $4;
   }
-| T_NEW class_name_reference ctor_arguments {
-    $$ = $1 + " " + $2 + $3;
+| new_expr {
+    $$ = $1;
   }
-| '(' T_NEW class_name_reference ctor_arguments ')' variable_property {
-    $$ = $1 + $2 + " " + $3 + $4 + $5 + $6;
+| '(' new_expr ')' instance_call {
+    $$ = $1 + $2 + $4;
   }
 | T_CLONE expr {
     $$ = $1 + " " + $2;
@@ -1372,9 +1423,27 @@ variable_property:
   }
 ;
 
-method_or_not:
+array_method_dereference:
+  array_method_dereference '[' dim_offset ']' {
+    $$ = $1 + $2 + $3 + $4;
+  }
+| method '[' dim_offset ']' {
+    $$ = $1 + $2 + $3 + $4;
+  }
+;
+
+method:
   '(' function_call_parameter_list ')' {
     $$ = $1 + $2 + $3;
+  }
+;
+
+method_or_not:
+  method {
+    $$ = $1;
+  }
+| array_method_dereference {
+    $$ = $1;
   }
 | /* empty */ {
     $$ = "";
@@ -1401,8 +1470,18 @@ variable_class_name:
   reference_variable
 ;
 
+array_function_dereference:
+  array_function_dereference '[' dim_offset ']' {
+    $$ = $1 + $2 + $3 + $4;
+  }
+| function_call '[' dim_offset ']' {
+    $$ = $1 + $2 + $3 + $4;
+  }
+;
+
 base_variable_with_function_calls:
   base_variable
+| array_function_dereference
 | function_call
 ;
 
@@ -2031,15 +2110,7 @@ fully_qualified_class_name:
 // back to regular PHP grammar. In the case where it's an extension of the PHP
 // grammar our code gets picked up.
 expr_without_variable:
-  expr '[' dim_offset ']' {
-    if (yyextra->idx_expr) {
-      yyextra->used = true;
-      $$ = (yyextra->emit_namespaces ? "\\__xhp_idx(" : "__xhp_idx(") + $1 + ", " + $3 + ")";
-    } else {
-      $$ = $1 + $2 + $3 + $4;
-    }
-  }
-| '[' array_pair_list ']' {
+  '[' array_pair_list ']' {
     yyextra->used = true;
     $$ = "array(" + $2 + ")";
   }
